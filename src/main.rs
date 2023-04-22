@@ -1,4 +1,5 @@
-use actix_web::{get, HttpResponse, Responder, Result};
+use actix_web::{App, HttpServer};
+use actix_web::{get, HttpResponse, Responder, Result, web};
 use serde::Serialize;
 
 mod api;
@@ -27,12 +28,16 @@ async fn not_found() -> Result<HttpResponse> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use actix_web::{App, HttpServer};
+    let todo_db = infrastructure::database::Database::new();
+    let app_data = web::Data::new(todo_db);
 
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         App::new()
+            .app_data(app_data.clone())
+            .configure(api::api::config)
             .service(healthcheck)
             .default_service(actix_web::web::route().to(not_found))
+            .wrap(actix_web::middleware::Logger::default())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
