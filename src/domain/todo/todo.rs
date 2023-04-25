@@ -1,21 +1,39 @@
 use chrono::prelude::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Todo {
-    pub id: Option<String>,
+pub struct TodoVo {
+    pub id: Option<Uuid>,
     pub title: String,
-    pub description: Option<String>,
-    pub created_at: Option<DateTime<Utc>>,
-    pub updated_at: Option<DateTime<Utc>>,
+    pub text: Option<String>,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-impl Todo {
+impl TodoVo {
     pub fn new(
-        id: Option<String>, title: String, description: Option<String>
+        id: Option<Uuid>, title: String, description: Option<String>
     ) -> Self {
         Self {
-            id,title,description,created_at: None,updated_at: None
+            id,
+            title,
+            text: description,
+            created_at: None,
+            updated_at: None
+        }
+    }
+
+    pub fn reconstruct(
+        id: Option<Uuid>, title: String, description: Option<String>,
+        created_at: Option<DateTime<Utc>>, updated_at: Option<DateTime<Utc>>
+    ) -> Self {
+        Self {
+            id,
+            title,
+            text: description,
+            created_at,
+            updated_at
         }
     }
 }
