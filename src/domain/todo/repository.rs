@@ -11,12 +11,12 @@ pub trait CreateTodoRepo {
 
 #[async_trait]
 pub trait ListTodoRepo {
-    async fn list() -> Result<Vec<TodoVo>>;
+    async fn list(&self, db: &DbConn) -> Result<Vec<TodoVo>>;
 }
 
 #[async_trait]
 pub trait GetTodoRepo {
-    async fn get_todo_by_id(&self, db: &DbConn ,id: &Uuid) -> Result<Option<TodoVo>>;
+    async fn get_todo_by_id(&self, db: &DbConn,id: &Uuid) -> Result<Option<TodoVo>>;
 }
 
 #[async_trait]

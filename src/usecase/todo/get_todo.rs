@@ -10,7 +10,7 @@ use crate::domain::todo::{repository::GetTodoRepo, todo::TodoVo};
 pub struct GetTodoUsecase;
 
 impl GetTodoUsecase {
-    pub async fn handle<T: GetTodoRepo>(&self, db: &DbConn, repository: &T, id: &str) -> Result<Option<TodoVo>> {
+    pub async fn handle(&self, db: &DbConn, repository: &impl GetTodoRepo, id: &str) -> Result<Option<TodoVo>> {
         let id = Uuid::parse_str(id)?;
         let todo = repository.get_todo_by_id(db, &id).await?;
 

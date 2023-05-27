@@ -1,11 +1,12 @@
 use std::env;
 
 use actix_web::{App, HttpServer};
-use actix_web::{get, HttpResponse, Responder, Result, web};
+use actix_web::{get, HttpResponse, Responder, middleware, Result, web};
 use serde::Serialize;
 
-use futures::executor::block_on;
 use sea_orm::{Database, DbErr, ConnectionTrait, DbBackend, Statement, DatabaseConnection};
+use migration::{Migrator, MigratorTrait};
+use listenfd::ListenFd;
 
 mod api;
 mod domain;
@@ -18,52 +19,41 @@ pub struct AppState {
     conn: DatabaseConnection
 }
 
-async fn run() -> Result<(), DbErr> {
-    dotenvy::dotenv().ok();
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let db_name = env::var("DATABASE_NAME").expect("DATABASE_NAME is not set in .env file");
-    let host = env::var("HOST").expect("HOST is not set in .env file");
-    let port = env::var("PORT").expect("PORT is not set in .env file");
-    let server_url = format!("{host}:{port}");
-
-    let db = Database::connect(&db_url).await?;
-
-    let db = &match db.get_database_backend() {
-        DbBackend::MySql => {
-            db.execute(Statement::from_string(
-                db.get_database_backend(),
-                format!("CREATE DATABASE IF NOT EXISTS `{}`;", &db_name),
-            ))
-            .await?;
-
-            let url = format!("{}/{}", &db_url, &db_name);
-            Database::connect(&url).await?
-        }
-        _ => unimplemented!(),
-    };
-    
-    Ok(())
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     tracing_subscriber::fmt::init();
 
-    let todo_db = infrastructure::database::Database::new();
-    let app_data = web::Data::new(todo_db);
+    dotenvy::dotenv().ok();
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+    let host = env::var("HOST").expect("HOST is not set in .env file");
+    let port = env::var("PORT").expect("PORT is not set in .env file");
+    let server_url = format!("{host}:{port}");
 
-    if let Err(err) = block_on(run()) {
-        panic!("{}", err);
-    }
+    // establish connection to database and apply migrations
+    // -> create table if not exists
+    let conn = Database::connect(&db_url).await.unwrap();
+    Migrator::up(&conn, None).await.unwrap();
 
-    HttpServer::new(move || {
+    // build app state
+    let state = AppState{ conn };
+
+    // create server and try to serve over socket if possible
+    let mut listenfd = ListenFd::from_env();
+    let mut server = HttpServer::new(move || {
         App::new()
-            .app_data(app_data.clone())
+            .app_data(web::Data::new(state.clone()))
+            .wrap(middleware::Logger::default())
             .configure(api::api::config)
-            .wrap(actix_web::middleware::Logger::default())
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
+    });
+
+    server = match listenfd.take_tcp_listener(0)? {
+        Some(listener) => server.listen(listener)?,
+        None => server.bind(&server_url)?
+    };
+
+    println!("Server running at http://{}/", &server_url);
+    server.run().await?;
+
+    Ok(())
 }

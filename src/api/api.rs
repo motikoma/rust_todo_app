@@ -1,10 +1,10 @@
 use actix_web::*;
 use actix_web::{web::{Data, Json}, post, HttpResponse};
-use serde::Serialize;
+use crate::infrastructure::todo::get_todo_repo::GetTodoRepository;
+use crate::infrastructure::todo::list_todo_repo::ListTodoRepository;
 use crate::{AppState, usecase};
 use crate::domain::todo::todo::TodoVo;
 use crate::infrastructure::database::Database;
-use crate::infrastructure::todo::get_todo_repo::TodoRepository;
 
 async fn not_found() -> Result<HttpResponse, actix_web::Error> {
     let responseBody = "not found";
@@ -27,15 +27,21 @@ pub async fn create_todo(db: Data<Database>, new_todo: Json<TodoVo>) -> HttpResp
 }
 
 #[get("/todos")]
-pub async fn get_todos(db: Data<Database>) -> HttpResponse {
-    let todos = db.get_todos();
-    HttpResponse::Ok().json(todos)
+pub async fn get_todos(db: web::Data<AppState>) -> HttpResponse {
+    let conn = &db.conn;
+    let repository = ListTodoRepository{};
+    let todos = usecase::todo::list_todo::ListTodoUsecase{}.handle(conn, &repository).await;
+
+    match todos {
+        Ok(todos) => HttpResponse::Ok().json(todos),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
 }
 
 #[get("/todos/{id}")]
 pub async fn get_todo_by_id(db: web::Data<AppState>, id: web::Path<String>) -> HttpResponse {
     let conn = &db.conn;
-    let repository = TodoRepository{};
+    let repository = GetTodoRepository{};
     let todo = usecase::todo::get_todo::GetTodoUsecase{}.handle(conn, &repository, &id).await;
 
     match todo {

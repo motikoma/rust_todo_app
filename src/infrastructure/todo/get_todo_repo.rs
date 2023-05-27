@@ -6,14 +6,13 @@ use anyhow::{anyhow, Result, Ok};
 use crate::{domain::todo::{repository::GetTodoRepo, todo::TodoVo}, entities};
 use entities::{prelude::*, *};
 
-pub struct TodoRepository {}
+pub struct GetTodoRepository {}
 
 #[async_trait]
-impl GetTodoRepo for TodoRepository {
+impl GetTodoRepo for GetTodoRepository {
     async fn get_todo_by_id(&self, db: &DbConn, id: &Uuid) -> Result<Option<TodoVo>> {
         let todo: Option<todo::Model> = Todo::find_by_id(id.to_string()).one(db).await?;
 
-        // TodoVoに変換
         let todo = match todo {
             Some(todo) => {
                 let todo = TodoVo {                    
