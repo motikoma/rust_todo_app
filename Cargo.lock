@@ -2078,7 +2078,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_todo_app_simple"
+name = "rust_todo_app"
 version = "0.1.0"
 dependencies = [
  "actix-http",
