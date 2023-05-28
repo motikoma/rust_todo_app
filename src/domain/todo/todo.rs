@@ -4,29 +4,29 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TodoVo {
-    pub id: Option<Uuid>,
+    pub id: Uuid,
     pub title: String,
-    pub text: Option<String>,
-    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
-    pub updated_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub text: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
 impl TodoVo {
     pub fn new(
-        id: Option<Uuid>, title: String, description: Option<String>
+        id: Uuid, title: String, description: String, created_at: DateTime<Utc>, updated_at: DateTime<Utc>
     ) -> Self {
         Self {
-            id,
+            id: Uuid::new_v4(),
             title,
             text: description,
-            created_at: None,
-            updated_at: None
+            created_at: created_at,
+            updated_at: updated_at
         }
     }
 
     pub fn reconstruct(
-        id: Option<Uuid>, title: String, description: Option<String>,
-        created_at: Option<DateTime<Utc>>, updated_at: Option<DateTime<Utc>>
+        id: Uuid, title: String, description: String,
+        created_at: DateTime<Utc>, updated_at: DateTime<Utc>
     ) -> Self {
         Self {
             id,

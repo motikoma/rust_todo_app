@@ -14,11 +14,11 @@ impl ListTodoRepo for ListTodoRepository {
         let todos = Todo::find().all(db).await?;
         let todoVos = todos.iter().map(|todo|{
             TodoVo {                    
-                id: Some(Uuid::parse_str(&todo.id.to_string()).unwrap()),
+                id: Uuid::parse_str(&todo.id.to_string()).unwrap(),
                 title: todo.title.clone(),
-                text: Some(todo.text.clone()),
-                created_at: Some(chrono::DateTime::from_utc(todo.created_at, chrono::Utc)),
-                updated_at: Some(chrono::DateTime::from_utc(todo.updated_at, chrono::Utc)),
+                text: todo.text.clone(),
+                created_at: chrono::DateTime::from_utc(todo.created_at, chrono::Utc),
+                updated_at: chrono::DateTime::from_utc(todo.updated_at, chrono::Utc),
             }     
         }).collect();
 

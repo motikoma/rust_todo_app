@@ -6,7 +6,7 @@ use super::todo::TodoVo;
 
 #[async_trait]
 pub trait CreateTodoRepo {
-    async fn create(&self, title: &Uuid) -> Result<TodoVo>;
+    async fn create(&self, db: &DbConn, todoVo: &TodoVo) -> Result<Uuid>;
 }
 
 #[async_trait]
@@ -16,15 +16,15 @@ pub trait ListTodoRepo {
 
 #[async_trait]
 pub trait GetTodoRepo {
-    async fn get_todo_by_id(&self, db: &DbConn,id: &Uuid) -> Result<Option<TodoVo>>;
+    async fn get(&self, db: &DbConn, id: &Uuid) -> Result<Option<TodoVo>>;
 }
 
 #[async_trait]
 pub trait UpdateTodoRepo {
-    async fn update(id: &Uuid) -> Result<TodoVo>;
+    async fn update(&self, db: &DbConn, id: &String, todoVo: &TodoVo) -> Result<TodoVo>;
 }
 
 #[async_trait]
 pub trait DeleteTodoRepo {
-    async fn delete(id: &Uuid) -> Result<()>;
+    async fn delete(&self, db: &DbConn, id: &Uuid) -> Result<u64>;
 }

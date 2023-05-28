@@ -22,9 +22,9 @@ impl Database {
         let created_at = Utc::now();
         let updated_at = Utc::now();
         let todo = TodoVo {
-            id: Some(id),
-            created_at: Some(created_at),
-            updated_at: Some(updated_at),
+            id: id,
+            created_at: created_at,
+            updated_at: updated_at,
             ..todo
         };
         todos.push(todo.clone());
@@ -38,27 +38,27 @@ impl Database {
 
     pub fn get_todo_by_id(&self, id: &str) -> Option<TodoVo> {
         let todos = self.todos.lock().unwrap();
-        todos.iter().find(|todo| todo.id == Some(
+        todos.iter().find(|todo| todo.id == 
             Uuid::parse_str(id).unwrap()
-        )).cloned()
+        ).cloned()
     }
 
     pub fn update_todo_by_id(&self, id: &str, todo: TodoVo) -> Option<TodoVo>{
         let mut todos = self.todos.lock().unwrap();
         let updated_at = Utc::now();
         let todo = TodoVo{
-            id: Some(            Uuid::parse_str(id).unwrap()),
-            updated_at: Some(updated_at),
+            id: Uuid::parse_str(id).unwrap(),
+            updated_at: updated_at,
             ..todo
         };
-        let index = todos.iter().position(|todo| todo.id == Some(Uuid::parse_str(id).unwrap()))?;
+        let index = todos.iter().position(|todo| todo.id == Uuid::parse_str(id).unwrap())?;
         todos[index] = todo.clone();
         Some(todo)
     }
 
     pub fn delete_todo_by_id(&self, id: &str) -> Option<TodoVo>{
         let mut todos = self.todos.lock().unwrap();
-        let index = todos.iter().position(|todo| todo.id == Some(Uuid::parse_str(id).unwrap()))?;
+        let index = todos.iter().position(|todo| todo.id == Uuid::parse_str(id).unwrap())?;
         Some(todos.remove(index))
     }
 }
